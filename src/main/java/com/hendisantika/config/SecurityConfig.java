@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
+    private static final String ROLE_ADMIN = "ADMIN";
     private final LoginSuccessHandler successHandler;
 
     private final DataSource dataSource;
@@ -55,11 +56,11 @@ public class SecurityConfig {
                         .requestMatchers("/", "/h2-console/**",
                                 "/css/**", "/js/**", "/img/**",
                                 "/clients", "/locale").permitAll()
-                        //.antMatchers("/ver/**").hasAnyRole("USER")
-                        //.antMatchers("/uploads/**").hasAnyRole("USER")
-                        //.antMatchers("/form/**").hasAnyRole("ADMIN")
-                        //.antMatchers("/remove/**").hasAnyRole("ADMIN")
-                        //.antMatchers("/invoice/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/ver/**").hasAnyRole("USER")
+                        .requestMatchers("/uploads/**").hasAnyRole("USER")
+                        .requestMatchers("/form/**").hasAnyRole(ROLE_ADMIN)
+                        .requestMatchers("/remove/**").hasAnyRole(ROLE_ADMIN)
+                        .requestMatchers("/invoice/**").hasAnyRole(ROLE_ADMIN)
                         .anyRequest().authenticated())
                 .formLogin(login -> login.successHandler(successHandler)
                 .loginPage("/login").permitAll())  //to tell Spring which path to use

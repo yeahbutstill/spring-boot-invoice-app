@@ -48,6 +48,12 @@ import java.util.Map;
 public class ClientController {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
+    private static final String ERROR = "error";
+    private static final String RDRECT_CLIENTS = "redirect:/clients";
+    private static final String CLIENT = "client";
+    private static final String FORM = "/form";
+    private static final String TITLE = "title";
+
 
     //@Qualifier ("clientDao") If we have several implementations
     //of the interface, we indicate which one we want to use by giving its name
@@ -73,7 +79,7 @@ public class ClientController {
     @Secured("ROLE_USER")
     @GetMapping(value = "/uploads/{filename:.+}")
     public ResponseEntity<Resource> viewFoto(@PathVariable String filename) {
-        Resource resource = null;
+        Resource resource;
         resource = uploadFileServiceImpl.load(filename);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=\"" + resource.getFilename() + "\"")
@@ -87,11 +93,11 @@ public class ClientController {
         //Client client = clientService.findOne(id);
         Client client = clientServiceImpl.fetchByIdWithInvoice(id);
         if (client == null) {
-            flash.addFlashAttribute("error", "The client does not exist in the database");
-            return "redirect:/clients";
+            flash.addFlashAttribute(ERROR, "The client does not exist in the database");
+            return RDRECT_CLIENTS;
         } else {
-            model.put("client", client);
-            model.put("title", "Customer details - " + client.getName());
+            model.put(CLIENT, client);
+            model.put(TITLE, "Customer details - " + client.getName());
         }
         return "view";
     }
@@ -112,7 +118,7 @@ public class ClientController {
          */
 
         //We check if the user has the necessary role for this resource
-        if (hasRole("ROLE_ADMIN")) {
+        if (hasRole()) {
             log.info("The user has the necessary role to access this resource");
         } else {
             log.error("The user does NOT have the necessary role to access this resource");
@@ -137,7 +143,7 @@ to this resource");
         Pageable pageRequest = PageRequest.of(page, 3);
         Page<Client> clients = clientServiceImpl.findAll(pageRequest);
         PageRender<Client> render = new PageRender<>("/clients", clients);
-        model.addAttribute("title", messageSource.getMessage("text.list.title", null, locale));
+        model.addAttribute(TITLE, messageSource.getMessage("text.list.title", null, locale));
         model.addAttribute("clients", clients);
         model.addAttribute("page", render);
         return "/list";
@@ -147,9 +153,9 @@ to this resource");
     @GetMapping(value = "/form")
     public String create(Map<String, Object> model) {
         Client client = new Client();
-        model.put("title", "Client form");
-        model.put("client", client);
-        return "/form";
+        model.put(TITLE, "Client form");
+        model.put(CLIENT, client);
+        return FORM;
     }
 
     //@Secured("ROLE_ADMIN")
@@ -160,16 +166,16 @@ to this resource");
         if (id > 0) {
             Client client = clientServiceImpl.findOne(id);
             if (client != null) {
-                model.put("title", "Edit customer");
-                model.put("client", client);
-                return "/form";
+                model.put(TITLE, "Edit customer");
+                model.put(CLIENT, client);
+                return FORM;
             } else {
-                flash.addFlashAttribute("error", "The ID is not valid");
-                return "redirect:/clients";
+                flash.addFlashAttribute(ERROR, "The ID is not valid");
+                return RDRECT_CLIENTS;
             }
         } else {
-            flash.addFlashAttribute("error", "The ID has to be positive");
-            return "redirect:/clients";
+            flash.addFlashAttribute(ERROR, "The ID has to be positive");
+            return RDRECT_CLIENTS;
         }
     }
 
@@ -179,8 +185,8 @@ to this resource");
                        @RequestParam("file") MultipartFile photo, RedirectAttributes flash,
                        SessionStatus sessionStatus) {
         if (result.hasErrors()) {
-            model.addAttribute("title", "Client form");
-            return "/form";
+            model.addAttribute(TITLE, "Client form");
+            return FORM;
         }
         if (!photo.isEmpty()) {
             /*
@@ -199,11 +205,11 @@ to this resource");
 
             //If the user already had a photo, we delete the old one
             if (client.getId() != null && client.getId() > 0
-                    && client.getPhoto() != null
-                    && client.getPhoto().length() > 0) {
+                && client.getPhoto() != null
+                && !client.getPhoto().isEmpty()) {
                 uploadFileServiceImpl.delete(client.getPhoto());
             }
-            String uniqueFileName = null;
+            String uniqueFileName;
             uniqueFileName = uploadFileServiceImpl.copy(photo);
             flash.addFlashAttribute(
                     "info",
@@ -228,13 +234,13 @@ to this resource");
                 flash.addFlashAttribute("info", "Foto " + client.getPhoto() + " successfully removed");
             }
         }
-        return "redirect:/clients";
+        return RDRECT_CLIENTS;
     }
 
     /*
      * This method allows you to have more control over the roles of the user, being able to access each of them
      */
-    private boolean hasRole(String role) {
+    private boolean hasRole() {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null) {
             Authentication auth = context.getAuthentication();
@@ -245,7 +251,7 @@ to this resource");
 						return true;
 					}
 				}*/
-                return authorities.contains(new SimpleGrantedAuthority(role));    //This form is more concise than
+                return authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN"));    //This form is more concise than
                 // using the for
             }
         }
