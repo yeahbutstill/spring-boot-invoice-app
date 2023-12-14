@@ -1,8 +1,8 @@
 package com.hendisantika.controller;
 
 import com.hendisantika.model.Client;
-import com.hendisantika.service.impl.ClientServiceImpl;
-import com.hendisantika.service.impl.UploadFileServiceImpl;
+import com.hendisantika.service.ClientService;
+import com.hendisantika.service.UploadFileService;
 import com.hendisantika.util.PageRender;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -30,9 +30,12 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by IntelliJ IDEA.
@@ -48,25 +51,19 @@ import java.util.Map;
 public class ClientController {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private static final String ERROR = "error";
-    private static final String RDRECT_CLIENTS = "redirect:/clients";
-    private static final String CLIENT = "client";
-    private static final String FORM = "/form";
-    private static final String TITLE = "title";
-
 
     //@Qualifier ("clientDao") If we have several implementations
     //of the interface, we indicate which one we want to use by giving its name
     //If we only have one, we use @Autowired
-    private final ClientServiceImpl clientServiceImpl;
+    private final ClientService clientService;
 
-    private final UploadFileServiceImpl uploadFileServiceImpl;
+    private final UploadFileService uploadFileService;
 
     private final MessageSource messageSource;
 
-    public ClientController(ClientServiceImpl clientServiceImpl, UploadFileServiceImpl uploadFileServiceImpl, MessageSource messageSource) {
-        this.clientServiceImpl = clientServiceImpl;
-        this.uploadFileServiceImpl = uploadFileServiceImpl;
+    public ClientController(ClientService clientService, UploadFileService uploadFileService, MessageSource messageSource) {
+        this.clientService = clientService;
+        this.uploadFileService = uploadFileService;
         this.messageSource = messageSource;
     }
 
@@ -79,10 +76,15 @@ public class ClientController {
     @Secured("ROLE_USER")
     @GetMapping(value = "/uploads/{filename:.+}")
     public ResponseEntity<Resource> viewFoto(@PathVariable String filename) {
-        Resource resource;
-        resource = uploadFileServiceImpl.load(filename);
+        Resource resource = null;
+        try {
+            resource = uploadFileService.load(filename);
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=\"" + resource.getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=\"" + Objects.requireNonNull(resource).getFilename() + "\"")
                 .body(resource);
     }
 
@@ -91,13 +93,13 @@ public class ClientController {
     @GetMapping(value = "/view/{id}")
     public String ver(@PathVariable Long id, Map<String, Object> model, RedirectAttributes flash) {
         //Client client = clientService.findOne(id);
-        Client client = clientServiceImpl.fetchByIdWithInvoice(id);
+        Client client = clientService.fetchByIdWithInvoice(id);
         if (client == null) {
-            flash.addFlashAttribute(ERROR, "The client does not exist in the database");
-            return RDRECT_CLIENTS;
+            flash.addFlashAttribute("error", "The client does not exist in the database");
+            return "redirect:/clients";
         } else {
-            model.put(CLIENT, client);
-            model.put(TITLE, "Customer details - " + client.getName());
+            model.put("client", client);
+            model.put("title", "Customer details - " + client.getName());
         }
         return "view";
     }
@@ -118,7 +120,7 @@ public class ClientController {
          */
 
         //We check if the user has the necessary role for this resource
-        if (hasRole()) {
+        if (hasRole("ROLE_ADMIN")) {
             log.info("The user has the necessary role to access this resource");
         } else {
             log.error("The user does NOT have the necessary role to access this resource");
@@ -141,9 +143,9 @@ to this resource");
         }
 
         Pageable pageRequest = PageRequest.of(page, 3);
-        Page<Client> clients = clientServiceImpl.findAll(pageRequest);
+        Page<Client> clients = clientService.findAll(pageRequest);
         PageRender<Client> render = new PageRender<>("/clients", clients);
-        model.addAttribute(TITLE, messageSource.getMessage("text.list.title", null, locale));
+        model.addAttribute("title", messageSource.getMessage("text.list.title", null, locale));
         model.addAttribute("clients", clients);
         model.addAttribute("page", render);
         return "/list";
@@ -153,9 +155,9 @@ to this resource");
     @GetMapping(value = "/form")
     public String create(Map<String, Object> model) {
         Client client = new Client();
-        model.put(TITLE, "Client form");
-        model.put(CLIENT, client);
-        return FORM;
+        model.put("title", "Client form");
+        model.put("client", client);
+        return "/form";
     }
 
     //@Secured("ROLE_ADMIN")
@@ -164,18 +166,18 @@ to this resource");
     @RequestMapping(value = "/form/{id}")
     public String edit(@PathVariable Long id, Map<String, Object> model, RedirectAttributes flash) {
         if (id > 0) {
-            Client client = clientServiceImpl.findOne(id);
+            Client client = clientService.findOne(id);
             if (client != null) {
-                model.put(TITLE, "Edit customer");
-                model.put(CLIENT, client);
-                return FORM;
+                model.put("title", "Edit customer");
+                model.put("client", client);
+                return "/form";
             } else {
-                flash.addFlashAttribute(ERROR, "The ID is not valid");
-                return RDRECT_CLIENTS;
+                flash.addFlashAttribute("error", "The ID is not valid");
+                return "redirect:/clients";
             }
         } else {
-            flash.addFlashAttribute(ERROR, "The ID has to be positive");
-            return RDRECT_CLIENTS;
+            flash.addFlashAttribute("error", "The ID has to be positive");
+            return "redirect:/clients";
         }
     }
 
@@ -185,8 +187,8 @@ to this resource");
                        @RequestParam("file") MultipartFile photo, RedirectAttributes flash,
                        SessionStatus sessionStatus) {
         if (result.hasErrors()) {
-            model.addAttribute(TITLE, "Client form");
-            return FORM;
+            model.addAttribute("title", "Client form");
+            return "/form";
         }
         if (!photo.isEmpty()) {
             /*
@@ -205,19 +207,23 @@ to this resource");
 
             //If the user already had a photo, we delete the old one
             if (client.getId() != null && client.getId() > 0
-                && client.getPhoto() != null
-                && !client.getPhoto().isEmpty()) {
-                uploadFileServiceImpl.delete(client.getPhoto());
+                    && client.getPhoto() != null
+                    && client.getPhoto().length() > 0) {
+                uploadFileService.delete(client.getPhoto());
             }
-            String uniqueFileName;
-            uniqueFileName = uploadFileServiceImpl.copy(photo);
+            String uniqueFileName = null;
+            try {
+                uniqueFileName = uploadFileService.copy(photo);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             flash.addFlashAttribute(
                     "info",
                     "Image uploaded successfully (" + uniqueFileName + ")");
             client.setPhoto(uniqueFileName);
         }
         String message = client.getId() != null ? "Customer edited successfully " : " Customer created successfully";
-        clientServiceImpl.save(client);
+        clientService.save(client);
         sessionStatus.setComplete();
         flash.addFlashAttribute("success", message);
         return "redirect:clients";
@@ -227,20 +233,20 @@ to this resource");
     @GetMapping(value = "/remove/{id}")
     public String remove(@PathVariable Long id, RedirectAttributes flash, Map<String, Object> model) {
         if (id > 0) {
-            Client client = clientServiceImpl.findOne(id);
-            clientServiceImpl.delete(id);
+            Client client = clientService.findOne(id);
+            clientService.delete(id);
             flash.addFlashAttribute("success", "Successfully removed customer");
-            if (uploadFileServiceImpl.delete(client.getPhoto())) {
+            if (uploadFileService.delete(client.getPhoto())) {
                 flash.addFlashAttribute("info", "Foto " + client.getPhoto() + " successfully removed");
             }
         }
-        return RDRECT_CLIENTS;
+        return "redirect:/clients";
     }
 
     /*
      * This method allows you to have more control over the roles of the user, being able to access each of them
      */
-    private boolean hasRole() {
+    private boolean hasRole(String role) {
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null) {
             Authentication auth = context.getAuthentication();
@@ -251,7 +257,7 @@ to this resource");
 						return true;
 					}
 				}*/
-                return authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN"));    //This form is more concise than
+                return authorities.contains(new SimpleGrantedAuthority(role));    //This form is more concise than
                 // using the for
             }
         }

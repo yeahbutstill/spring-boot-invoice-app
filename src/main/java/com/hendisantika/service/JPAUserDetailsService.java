@@ -1,9 +1,10 @@
-package com.hendisantika.service.impl;
+package com.hendisantika.service;
 
 import com.hendisantika.model.Role;
 import com.hendisantika.model.User;
 import com.hendisantika.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,17 +25,18 @@ import java.util.List;
  * Date: 14/09/21
  * Time: 07.01
  */
-@Slf4j
 @Service("jpaUserDetailsService")
-public class JPAUserDetailsServiceImpl implements UserDetailsService {
+public class JPAUserDetailsService implements UserDetailsService {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final UserRepository userRepository;
 
-    public JPAUserDetailsServiceImpl(UserRepository userRepository) {
+    public JPAUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
-    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
         if (user == null) {

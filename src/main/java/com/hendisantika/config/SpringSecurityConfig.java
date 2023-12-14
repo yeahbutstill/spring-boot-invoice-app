@@ -1,17 +1,15 @@
 package com.hendisantika.config;
 
 import com.hendisantika.auth.handler.LoginSuccessHandler;
-import com.hendisantika.service.impl.JPAUserDetailsServiceImpl;
+import com.hendisantika.service.JPAUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import javax.sql.DataSource;
 
@@ -26,18 +24,17 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
-public class SecurityConfig {
+public class SpringSecurityConfig {
 
-    private static final String ROLE_ADMIN = "ADMIN";
     private final LoginSuccessHandler successHandler;
 
     private final DataSource dataSource;
 
     private final BCryptPasswordEncoder passwordEncoder;
 
-    private final JPAUserDetailsServiceImpl userDetailsService;
+    private final JPAUserDetailsService userDetailsService;
 
-    public SecurityConfig(LoginSuccessHandler successHandler, DataSource dataSource, BCryptPasswordEncoder passwordEncoder, JPAUserDetailsServiceImpl userDetailsService) {
+    public SpringSecurityConfig(LoginSuccessHandler successHandler, DataSource dataSource, BCryptPasswordEncoder passwordEncoder, JPAUserDetailsService userDetailsService) {
         this.successHandler = successHandler;
         this.dataSource = dataSource;
         this.passwordEncoder = passwordEncoder;
@@ -45,27 +42,33 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+    SecurityFilterChain configure(HttpSecurity http) throws Exception {
         //Here we specify the roles required to access
         //each route. The "long" way is to specify each path access here,
         //but it can also be done directly in the controller, using
         //the @Secured (role) annotation on each method
-        http
-                .authorizeHttpRequests(a -> a
-                        .requestMatchers("/", "/h2-console/**",
-                                "/css/**", "/js/**", "/img/**",
-                                "/clients", "/locale").permitAll()
-                        .requestMatchers("/ver/**").hasAnyRole("USER")
-                        .requestMatchers("/uploads/**").hasAnyRole("USER")
-                        .requestMatchers("/form/**").hasAnyRole(ROLE_ADMIN)
-                        .requestMatchers("/remove/**").hasAnyRole(ROLE_ADMIN)
-                        .requestMatchers("/invoice/**").hasAnyRole(ROLE_ADMIN)
-                        .anyRequest().authenticated())
-                .formLogin(login -> login.successHandler(successHandler)
-                .loginPage("/login").permitAll())  //to tell Spring which path to use
-                .logout(LogoutConfigurer::permitAll)
-                .exceptionHandling(handling -> handling.accessDeniedPage("/error_403"));
+        http.authorizeHttpRequests(
+                c -> c.requestMatchers("/", "/h2-console/**", "/css/**", "/js/**", "/img/**", "/clients", "/locale").permitAll()
+                        //.antMatchers("/ver/**").hasAnyRole("USER")
+                        //.antMatchers("/uploads/**").hasAnyRole("USER")
+                        //.antMatchers("/form/**").hasAnyRole("ADMIN")
+                        //.antMatchers("/remove/**").hasAnyRole("ADMIN")
+                        //.antMatchers("/invoice/**").hasAnyRole("ADMIN")
+                        .anyRequest().authenticated()
+        );
+
+        http.formLogin(
+                c -> c.successHandler(successHandler)
+                        .loginPage("/login").permitAll() //The .loginPage (path) method serves to tell Spring which path to use
+        );
+
+        http.logout(
+                c -> c.permitAll()
+        );
+
+        http.exceptionHandling(
+                c -> c.accessDeniedPage("/error_403")
+        );
 
         return http.build();
     }

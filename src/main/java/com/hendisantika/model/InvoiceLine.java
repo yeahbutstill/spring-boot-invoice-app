@@ -1,7 +1,17 @@
 package com.hendisantika.model;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,21 +22,21 @@ import lombok.*;
  * Date: 14/09/21
  * Time: 06.35
  */
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@Getter
-@Setter
-@EqualsAndHashCode
-@ToString
+@NoArgsConstructor
 @Entity
 @Table(name = "invoice_lines")
-public class InvoiceLine {
+public class InvoiceLine implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer quantity;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     /*
      * The @JoinColumn is not necessary here, as by default
      * JPA would create the column with the name "product_id"

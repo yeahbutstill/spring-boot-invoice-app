@@ -1,9 +1,12 @@
 package com.hendisantika.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.*;
-
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -16,15 +19,14 @@ import java.util.List;
  * Date: 14/09/21
  * Time: 06.41
  */
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@Getter
-@Setter
-@EqualsAndHashCode
-@ToString
 @Entity
 @Table(name = "invoices")
-public class Invoice {
+public class Invoice implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +40,7 @@ public class Invoice {
     @Column(name = "created_at")
     private Date createdAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Client client;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -48,6 +50,10 @@ public class Invoice {
     @PrePersist
     public void prePersist() {
         createdAt = new Date();
+    }
+
+    public Invoice() {
+        this.lines = new ArrayList<>();
     }
 
     public void addLine(InvoiceLine line) {

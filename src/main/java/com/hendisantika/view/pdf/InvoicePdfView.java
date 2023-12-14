@@ -3,18 +3,20 @@ package com.hendisantika.view.pdf;
 import com.hendisantika.model.Invoice;
 import com.hendisantika.model.InvoiceLine;
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractPdfView;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,11 +39,10 @@ public class InvoicePdfView extends AbstractPdfView {
 
         Invoice invoice = (Invoice) model.get("invoice");
 
-        PdfPCell cell = new PdfPCell();
-
+        PdfPCell cell;
         PdfPTable clientDataTable = new PdfPTable(1);
         clientDataTable.setSpacingAfter(20);
-        cell = new PdfPCell(new Phrase(messages.getMessage("text.invoice.view.data.client")));
+        cell = new PdfPCell(new Phrase(Objects.requireNonNull(messages).getMessage("text.invoice.view.data.client")));
         cell.setBackgroundColor(new Color(184, 218, 255));
         cell.setPadding(8f);
         clientDataTable.addCell(cell);
@@ -72,15 +73,15 @@ public class InvoicePdfView extends AbstractPdfView {
             productsTable.addCell(line.getProduct().getName());
             productsTable.addCell(line.getProduct().getPrice().toString());
             cell = new PdfPCell(new Phrase(line.getQuantity().toString()));
-            cell.setHorizontalAlignment(PdfPCell.ALIGN_CENTER);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
             productsTable.addCell(cell);
             cell = new PdfPCell(new Phrase(line.calculatePrice().toString()));
-            cell.setHorizontalAlignment(PdfPCell.ALIGN_RIGHT);
+            cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             productsTable.addCell(cell);
         }
         cell = new PdfPCell(new Phrase("Total: "));
         cell.setColspan(3);
-        cell.setHorizontalAlignment(PdfPCell.ALIGN_RIGHT);
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         productsTable.addCell(cell);
 
         productsTable.addCell(invoice.getTotal().toString());
