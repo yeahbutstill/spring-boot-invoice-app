@@ -3,8 +3,7 @@ package com.hendisantika.service;
 import com.hendisantika.model.Role;
 import com.hendisantika.model.User;
 import com.hendisantika.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,9 +25,8 @@ import java.util.List;
  * Time: 07.01
  */
 @Service("jpaUserDetailsService")
+@Slf4j
 public class JPAUserDetailsService implements UserDetailsService {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final UserRepository userRepository;
 

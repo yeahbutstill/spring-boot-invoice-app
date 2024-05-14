@@ -2,16 +2,14 @@ package com.hendisantika.config;
 
 import com.hendisantika.auth.handler.LoginSuccessHandler;
 import com.hendisantika.service.JPAUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.sql.DataSource;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,58 +21,67 @@ import javax.sql.DataSource;
  * Time: 05.34
  */
 @Configuration
-@EnableMethodSecurity(securedEnabled = true)
+// Anotasi ini digunakan untuk mengaktifkan keamanan berbasis metode dalam aplikasi Spring.
+// Anotasi ini untuk mengonfigurasi fitur keamanan berbasis metode seperti mengamankan metode atau class
+// dengan menggunakan anotasi seperti @PreAuthorize, @PostAuthorize, @Secured, dll.
+// Digunakan ketika memerlukan kontrol akses yang halus terhadap metode atau class individual dalam aplikasi.
+@EnableMethodSecurity
+// Anotasi ini digunakan untuk mengaktifkan keamanan web dalam aplikasi Spring Boot
+// Anotasi ini memungkinkan Anda untuk mengkonfigurasi fitur keamanan web seperti autentikasi, otorisasi, perlindungan CSRF,
+// pengelolaan sesi, dll.Digunakan ketika Anda perlu mengamankan titik akhir web dalam aplikasi Anda.
+@EnableWebSecurity
+// Tergantung pada kebutuhan, mungkin perlu menggunakan salah satu atau kedua anotasi ini dalam konfigurasi
+// Spring Security.
 public class SpringSecurityConfig {
 
     private final LoginSuccessHandler successHandler;
-
-    private final DataSource dataSource;
-
-    private final BCryptPasswordEncoder passwordEncoder;
-
+//    private final DataSource dataSource;
+//    private final BCryptPasswordEncoder passwordEncoder;
     private final JPAUserDetailsService userDetailsService;
 
-    public SpringSecurityConfig(LoginSuccessHandler successHandler, DataSource dataSource, BCryptPasswordEncoder passwordEncoder, JPAUserDetailsService userDetailsService) {
+    public SpringSecurityConfig(LoginSuccessHandler successHandler, JPAUserDetailsService userDetailsService) {
         this.successHandler = successHandler;
-        this.dataSource = dataSource;
-        this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
     }
 
     @Bean
-    SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable);
+
         //Here we specify the roles required to access
         //each route. The "long" way is to specify each path access here,
         //but it can also be done directly in the controller, using
         //the @Secured (role) annotation on each method
+        // Set permissions on endpoints
         http.authorizeHttpRequests(
-                c -> c.requestMatchers("/", "/h2-console/**", "/css/**", "/js/**", "/img/**", "/clients", "/locale").permitAll()
-                        //.antMatchers("/ver/**").hasAnyRole("USER")
-                        //.antMatchers("/uploads/**").hasAnyRole("USER")
-                        //.antMatchers("/form/**").hasAnyRole("ADMIN")
-                        //.antMatchers("/remove/**").hasAnyRole("ADMIN")
-                        //.antMatchers("/invoice/**").hasAnyRole("ADMIN")
+                // our public endpoints
+                c -> c.requestMatchers("/", "/h2-console/**", "/css/**", "/js/**", "/img/**", "/clients",
+                                "/locale").permitAll()
+                        // our private endpoints
+//                        .requestMatchers("/ver/**").hasAnyRole("USER")
+//                        .requestMatchers("/uploads/**").hasAnyRole("USER")
+//                        .requestMatchers("/form/**").hasAnyRole("ADMIN")
+//                        .requestMatchers("/remove/**").hasAnyRole("ADMIN")
+//                        .requestMatchers("/invoice/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
         );
 
-        http.formLogin(
-                c -> c.successHandler(successHandler)
-                        .loginPage("/login").permitAll() //The .loginPage (path) method serves to tell Spring which path to use
+        http.userDetailsService(userDetailsService)
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .httpBasic(Customizer.withDefaults());
+
+        http.formLogin(c -> c.successHandler(successHandler)
+                //The .loginPage (path) method serves //to tell Spring which path to use
+                .loginPage("/login").permitAll()
         );
 
-        http.logout(
-                c -> c.permitAll()
-        );
-
-        http.exceptionHandling(
-                c -> c.accessDeniedPage("/error_403")
-        );
-
+        http.logout(c -> c.permitAll());
+        http.exceptionHandling(c -> c.accessDeniedPage("/error_403"));
         return http.build();
     }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder build) throws Exception {
+//    public void configureGlobal(AuthenticationManagerBuilder build) throws Exception {
         //This code allows to implement users "in memory"
         //UserBuilder users = User.withDefaultPasswordEncoder(); //Spring Boot 1.5.10
 		/*PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder(); //Spring Boot 2
@@ -100,7 +107,8 @@ public class SpringSecurityConfig {
 						+ "WHERE U.USERNAME=?");*/
 
         //This code allows to implement users with database through JPA.
-        build.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder);
-    }
+//        build.userDetailsService(userDetailsService)
+//                .passwordEncoder(passwordEncoder());
+//    }
+
 }

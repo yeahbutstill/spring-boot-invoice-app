@@ -15,7 +15,6 @@ import java.util.List;
  * Time: 05.20
  */
 public class PageRender<T> {
-
     private final String url;
     private final Page<T> page;
     private final int totalPages;
@@ -94,5 +93,4 @@ public class PageRender<T> {
     public List<PageItem> getPages() {
         return pages;
     }
-
 }

@@ -2,6 +2,8 @@ package com.hendisantika.view.xlsx;
 
 import com.hendisantika.model.Invoice;
 import com.hendisantika.model.InvoiceLine;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -14,10 +16,7 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractXlsxView;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,7 +44,7 @@ public class InvoiceXlsxView extends AbstractXlsxView {
 
         Row row = sheet.createRow(0);    // First row
         Cell cell = row.createCell(0);    // First column
-        cell.setCellValue(Objects.requireNonNull(messages).getMessage("text.invoice.view.data.client"));
+        cell.setCellValue(messages.getMessage("text.invoice.view.data.client"));
 
         row = sheet.createRow(1);
         cell = row.createCell(0);

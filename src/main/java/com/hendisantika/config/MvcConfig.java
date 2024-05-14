@@ -1,7 +1,6 @@
 package com.hendisantika.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,8 +23,8 @@ import java.util.Locale;
  * Time: 05.28
  */
 @Configuration
+@Slf4j
 public class MvcConfig implements WebMvcConfigurer {
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     //Option to be able to load the images from the directory
     //It can also be done in the controller
@@ -53,7 +52,7 @@ public class MvcConfig implements WebMvcConfigurer {
     }
 
     //This method takes care of saving, in this case in the session (although
-    //can be saved in cookies, etc) the "locale".
+    //can be saved in cookies, etc.) the "locale".
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver localeResolver = new SessionLocaleResolver();

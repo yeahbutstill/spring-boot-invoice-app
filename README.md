@@ -1,6 +1,7 @@
 # spring-boot-invoice-app
 
 ## Setup Database Using Docker
+### mysql
 ```shell
 docker run --rm \
 --name=invoice-db \
@@ -12,18 +13,8 @@ docker run --rm \
 -p 6603:3306 \
 -v "$PWD/docker/invoice-db/conf.d":/etc/mysql/conf.d \
 -v "$PWD/storage/docker/invoicedb-data":/var/lib/mysql \
-mysql:8
+mysql:8.4
 ```
-
-## Run Open Rewrite
-```shell
-mvn rewrite:run
-```
-- thymeleaf-extras-springsecurity5 -> thymeleaf-extras-springsecurity6 
-- java.version 11 -> 17
-- spring boot 2 -> 3.1.3
-- and more chenge for active recipes in here https://docs.openrewrite.org/recipes/java
-
 ## Run App
 ```shell
 mvn clean install spring-boot:run

@@ -1,13 +1,13 @@
 package com.hendisantika.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;

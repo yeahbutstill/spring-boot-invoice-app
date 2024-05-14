@@ -5,6 +5,7 @@ import com.hendisantika.model.Invoice;
 import com.hendisantika.model.InvoiceLine;
 import com.hendisantika.model.Product;
 import com.hendisantika.service.ClientService;
+import jakarta.validation.Valid;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +45,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/form/{clientId}")
-    public String create(@PathVariable Long clientId, Map<String, Object> model,
+    public String create(@PathVariable(value = "clientId") Long clientId, Map<String, Object> model,
                          RedirectAttributes flash) {
         Client client = clientService.findOne(clientId);
         if (client == null) {
@@ -99,7 +99,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/view/{id}")
-    public String ver(@PathVariable Long id,
+    public String ver(@PathVariable(value = "id") Long id,
                       Model model,
                       RedirectAttributes flash) {
         //Invoice invoice = clientService.findInvoiceById(id);
@@ -115,7 +115,7 @@ public class InvoiceController {
 
     @GetMapping("/remove/{id}")
     public String remove(
-            @PathVariable Long id,
+            @PathVariable(value = "id") Long id,
             RedirectAttributes flash) {
         Invoice invoice = clientService.findInvoiceById(id);
         if (invoice != null) {

@@ -26,9 +26,7 @@ import java.util.List;
 @Transactional
 public class ClientService {
     private final ClientRepository clientRepository;
-
     private final ProductRepository productRepository;
-
     private final InvoiceRepository invoiceRepository;
 
     public ClientService(ClientRepository clientRepository, ProductRepository productRepository, InvoiceRepository invoiceRepository) {

@@ -1,7 +1,6 @@
 package com.hendisantika.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ import java.util.UUID;
  * Time: 06.58
  */
 @Service
+@Slf4j
 public class UploadFileService {
     private static final String UPLOADS_FOLDER = "uploads";
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public Resource load(String filename) throws MalformedURLException {
         //We load the path of the required image

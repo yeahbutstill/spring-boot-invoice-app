@@ -1,16 +1,10 @@
 package com.hendisantika.model;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.io.Serializable;
 
 /**
@@ -38,8 +32,8 @@ public class InvoiceLine implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     /*
-     * The @JoinColumn is not necessary here, as by default
-     * JPA would create the column with the name "product_id"
+      The @JoinColumn is not necessary here, as by default
+      JPA would create the column with the name "product_id"
      */
     //@JoinColumn(name="product_id")
     private Product product;

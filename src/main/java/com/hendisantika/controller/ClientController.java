@@ -6,8 +6,7 @@ import com.hendisantika.service.UploadFileService;
 import com.hendisantika.util.PageRender;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -25,7 +24,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -35,7 +39,6 @@ import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by IntelliJ IDEA.
@@ -48,17 +51,14 @@ import java.util.Objects;
  */
 @Controller
 @SessionAttributes("client")
+@Slf4j
 public class ClientController {
-
-    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     //@Qualifier ("clientDao") If we have several implementations
     //of the interface, we indicate which one we want to use by giving its name
     //If we only have one, we use @Autowired
     private final ClientService clientService;
-
     private final UploadFileService uploadFileService;
-
     private final MessageSource messageSource;
 
     public ClientController(ClientService clientService, UploadFileService uploadFileService, MessageSource messageSource) {
@@ -84,14 +84,14 @@ public class ClientController {
             e.printStackTrace();
         }
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=\"" + Objects.requireNonNull(resource).getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
 
     //@Secured("ROLE_USER")
     @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping(value = "/view/{id}")
-    public String ver(@PathVariable Long id, Map<String, Object> model, RedirectAttributes flash) {
+    public String ver(@PathVariable(value = "id") Long id, Map<String, Object> model, RedirectAttributes flash) {
         //Client client = clientService.findOne(id);
         Client client = clientService.fetchByIdWithInvoice(id);
         if (client == null) {
@@ -105,13 +105,13 @@ public class ClientController {
     }
 
     @GetMapping(value = {"/clients", "/"})
-    public String lists(@RequestParam(defaultValue = "0") int page,
+    public String lists(@RequestParam(name = "page", defaultValue = "0") int page,
                         Model model,
                         Authentication authentication,
                         HttpServletRequest request,
                         Locale locale) {
         if (authentication != null) {
-            log.info("The current user is {}", authentication.getName());
+            log.info("The current user is " + authentication.getName());
         }
         /*
          * We can also get access to authentication without injecting it, through the
@@ -164,7 +164,7 @@ to this resource");
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     //The @PreAuthorize annotation is the same as @Secured, only it allows more control
     @RequestMapping(value = "/form/{id}")
-    public String edit(@PathVariable Long id, Map<String, Object> model, RedirectAttributes flash) {
+    public String edit(@PathVariable(value = "id") Long id, Map<String, Object> model, RedirectAttributes flash) {
         if (id > 0) {
             Client client = clientService.findOne(id);
             if (client != null) {
@@ -231,7 +231,7 @@ to this resource");
 
     @Secured("ROLE_ADMIN")
     @GetMapping(value = "/remove/{id}")
-    public String remove(@PathVariable Long id, RedirectAttributes flash, Map<String, Object> model) {
+    public String remove(@PathVariable(value = "id") Long id, RedirectAttributes flash, Map<String, Object> model) {
         if (id > 0) {
             Client client = clientService.findOne(id);
             clientService.delete(id);
