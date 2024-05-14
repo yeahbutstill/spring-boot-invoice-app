@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,6 +26,7 @@ import java.util.List;
 @Table(name = "invoices")
 public class Invoice implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -40,10 +42,10 @@ public class Invoice implements Serializable {
     @Column(name = "created_at")
     private Date createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private Client client;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "invoice_id")
     private List<InvoiceLine> lines;
 

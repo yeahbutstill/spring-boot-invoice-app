@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -23,6 +24,7 @@ import java.io.Serializable;
 @Table(name = "invoice_lines")
 public class InvoiceLine implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -30,7 +32,7 @@ public class InvoiceLine implements Serializable {
     private Long id;
     private Integer quantity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     /*
       The @JoinColumn is not necessary here, as by default
       JPA would create the column with the name "product_id"
